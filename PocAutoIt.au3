@@ -4,6 +4,7 @@
 #include <File.au3>
 #include <StringConstants.au3>
 
+
 Call(excelToNotepad)
 
 Func openKbank()
@@ -114,46 +115,39 @@ Func openScbMetrabyte()
 EndFunc
 
 Func excelToNotepad()
-   $pathMainStatement = "C:\Users\User\Desktop\KbankMetrabyte.txt"
+   $pathMainStatement = "C:\Users\Mark\Desktop\Metrabyte\MetrabyteAutoit\KbankMetrabyte.txt"
    $linePreviousStatement = FileReadLine($pathMainStatement,1)
-   $path = "C:\Users\User\Downloads\saving_account.csv"
-   $pathMetrabyteKbank = "‪C:\Users\User\Desktop\KbankMetrabyte.txt"
+   $path = "C:\Users\Mark\Downloads\saving_account.csv"
 
    $oExcel = _Excel_Open()
    $oWorkbook = _Excel_BookOpen($oExcel,$path)
-   $aArray = _Excel_RangeRead($oWorkbook, Default, $oWorkbook.ActiveSheet.Usedrange.Rows("8:23"), 1)
-;~    _ArrayDisplay($aArray, "$aArray")
+   $aArrayExcel = _Excel_RangeRead($oWorkbook, Default, $oWorkbook.ActiveSheet.Usedrange.Rows("8:30"), 1)
+;~    _ArrayDisplay($aArrayExcel, "$aArrayExcel")
    $arrayMetrabyteKbank = StringSplit($linePreviousStatement,@TAB,2)
 ;~    _ArrayDisplay($arrayMetrabyteKbank, "$arrayMetrabyteKbank")
 
-   if $arrayMetrabyteKbank[2] = $aArray[0][2] Then
-	  ConsoleWrite("True")
+;~    For $i=0 To 10 Step +1
+   If $arrayMetrabyteKbank[0] = $aArrayExcel[22][0] And $arrayMetrabyteKbank[1] = $aArrayExcel[22][1] And $arrayMetrabyteKbank[2] = $aArrayExcel[22][2] And $arrayMetrabyteKbank[3] = $aArrayExcel[22][4] And $arrayMetrabyteKbank[4] = $aArrayExcel[22][5] And $arrayMetrabyteKbank[5] = $aArrayExcel[22][6] Then
+	  ConsoleWrite("Match")
    Else
-	  ConsoleWrite("false")
+	  ConsoleWrite("Not Match")
    EndIf
 
-;~    Run("notepad.exe")
-;~    WinWaitActive("Untitled - Notepad")
+
+
+
+;~    if $arrayMetrabyteKbank[1] = $aArrayExcel[4][1] Then
+;~ 	  ConsoleWrite("True")
+;~    Else
+;~ 	  ConsoleWrite("false")
+;~    EndIf
 
 ;~    $row = 8
 ;~    While(True)
 ;~ 	  use excel rangeread line $row and check linePreviousStatement
 ;~    WEnd
 
-;~    For $i=8 to 23
-;~ 	  Send(_Excel_RangeRead($oWorkbook,Default,"A"&$i))
-;~ 	  Send("{TAB 2}")
-;~ 	  Send(_Excel_RangeRead($oWorkbook,Default,"B"&$i))
-;~ 	  Send("{TAB}")
-;~ 	  Send(_Excel_RangeRead($oWorkbook,Default,"C"&$i))
-;~ 	  Send("{TAB}")
-;~ 	  Send(_Excel_RangeRead($oWorkbook,Default,"E"&$i))
-;~ 	  Send("{TAB}")
-;~ 	  Send(_Excel_RangeRead($oWorkbook,Default,"F"&$i))
-;~ 	  Send("{TAB}")
-;~ 	  Send(_Excel_RangeRead($oWorkbook,Default,"G"&$i))
-;~ 	  Send("{ENTER}")
-;~    Next
+
 
 EndFunc
 
