@@ -4,10 +4,22 @@
 #include <File.au3>
 #include <StringConstants.au3>
 
-Call(excelToNotepad)
+Func exitHot()
+   Exit
+EndFunc   ;==>exitHot
+HotKeySet("{Esc}", "exitHot")
+
+;~ Call(openKbank)
+;~ Sleep(4000)
+Call(excelToNotepadKbank)
 
 Func openKbank()
+
    Call(removeKbank)
+
+   $path = "C:\Users\User\Downloads\saving_account.csv"
+   $excelFile = FileExists($path)
+
    Local $username = "hostinglotus"
    Local $password = "Fern2523"
    ShellExecute("chrome.exe", "https://online.kasikornbankgroup.com/K-Online/login.jsp?lang=TH&type=sme --new-window --start-fullscreen")
@@ -29,8 +41,25 @@ Func openKbank()
    Send("{DOWN}")
    Send("{ENTER}")
    Sleep(4000)
-   Send("{TAB 31}")
+
+   $nTab = 29
+   While 1
+	  Send("{TAB "&$nTab&"}")
+	  Send("{ENTER}")
+	  Sleep(5000)
+	  If FileExists($path) Then
+		 ExitLoop
+	  Else
+		 $nTab += 1
+	  EndIf
+   WEnd
+
+   Sleep(4000)
+   Send("{TAB 9}")
    Send("{ENTER}")
+   Sleep(4000)
+   Send("!+{F4}",0)
+
 EndFunc
 
 Func openScbHostinglotus()
@@ -38,7 +67,7 @@ Func openScbHostinglotus()
    Call(removeScbHostinglotus)
    Local $username = "nanrat2758"
    Local $password = "Zai@2021"
-   ShellExecute("chrome.exe", "https://www.scbbusiness.com/auth/login --new-window --start-fullscreen")
+   $chrome = ShellExecute("chrome.exe", "https://www.scbbusiness.com/auth/login --new-window --start-fullscreen")
    Sleep(3000)
    Send($username)
    Send("{ENTER}")
@@ -56,7 +85,7 @@ Func openScbHostinglotus()
    Sleep(500)
    Send("^c")
    Sleep(500)
-   Run("notepad.exe")
+   $data = Run("notepad.exe")
    Sleep(1000)
    Send("^v")
    Sleep(1000)
@@ -65,6 +94,10 @@ Func openScbHostinglotus()
    Send(@desktopdir & "\hostinglotus.txt")
    Sleep(500)
    Send("{ENTER}")
+   Sleep(500)
+   ProcessClose($data)
+   Sleep(1000)
+   Send("!+{F4}",0)
 EndFunc
 
 Func openScbMetrabyte()
@@ -102,7 +135,7 @@ Func openScbMetrabyte()
    Sleep(500)
    Send("^c")
    Sleep(500)
-   Run("notepad.exe")
+   $data = Run("notepad.exe")
    Sleep(1000)
    Send("^v")
    Sleep(1000)
@@ -111,9 +144,17 @@ Func openScbMetrabyte()
    Send(@desktopdir & "\metrabyte.txt")
    Sleep(500)
    Send("{ENTER}")
+   Sleep(1000)
+   ProcessClose($data)
+   Sleep(1000)
+   Send("!+{F4}",0)
 EndFunc
 
-Func excelToNotepad()
+Func excelToNotepadKbank()
+
+   Global $checkArrayNull = 0
+   Global $checkCollumn = 0
+   Global $rows
    $pathMainStatement = "C:\Users\User\Desktop\KbankMetrabyte.txt"
    $linePreviousStatement = FileReadLine($pathMainStatement,1)
    $path = "C:\Users\User\Downloads\saving_account.csv"
@@ -121,39 +162,108 @@ Func excelToNotepad()
 
    $oExcel = _Excel_Open()
    $oWorkbook = _Excel_BookOpen($oExcel,$path)
-   $aArray = _Excel_RangeRead($oWorkbook, Default, $oWorkbook.ActiveSheet.Usedrange.Rows("8:23"), 1)
-;~    _ArrayDisplay($aArray, "$aArray")
+   Global $NumberOfRows = $oWorkbook.ActiveSheet.UsedRange.Rows.Count
+   $aArrayExcel = _Excel_RangeRead($oWorkbook, Default, $oWorkbook.ActiveSheet.Usedrange.Rows("8:"&$NumberOfRows), 1)
    $arrayMetrabyteKbank = StringSplit($linePreviousStatement,@TAB,2)
-;~    _ArrayDisplay($arrayMetrabyteKbank, "$arrayMetrabyteKbank")
 
-   if $arrayMetrabyteKbank[2] = $aArray[0][2] Then
-	  ConsoleWrite("True")
+   _ArrayDisplay($aArrayExcel)
+   $checkOldFilePattern = StringMid($aArrayExcel[0][0],9,1)
+   If $checkOldFilePattern = " " Then
+	  ConsoleWrite("Old Pattern")
    Else
-	  ConsoleWrite("false")
+	  For $i=0 To $NumberOfRows Step +1
+		 if $aArrayExcel[$i][0] = "" Then
+			ExitLoop
+		 Else
+			$date = StringLeft($aArrayExcel[$i][0],8)
+			$time = StringMid($aArrayExcel[$i][0],9)
+			$year = StringLeft($date,4)
+			$day = StringMid($date,5,2)
+			$month = StringRight($date,2)
+			$hour = StringLeft($time,2)
+			$minutes = StringMid($time,3,2)
+			$aArrayExcel[$i][0] = $year&"/"&$month&"/"&$day&" "&$hour&":"&$minutes&":"&"00"
+		 EndIf
+	  Next
    EndIf
 
-;~    Run("notepad.exe")
-;~    WinWaitActive("Untitled - Notepad")
+   $checkWithdraw= _Excel_RangeRead($oWorkbook,1,"D8:D"&$NumberOfRows)
+   For $i=0 To $NumberOfRows-8 Step + 1
+	  If $checkWithdraw[$i] = "" Then
+		 $rows = $NumberOfRows-9
+	  Else
+		 $checkCollumn += 1
+		 if $checkCollumn > 1 Then
+			$rows = $NumberOfRows-10
+			ExitLoop
+		 EndIf
+	  EndIf
+   Next
 
-;~    $row = 8
-;~    While(True)
-;~ 	  use excel rangeread line $row and check linePreviousStatement
-;~    WEnd
+   Global $newDataArray[$rows][7]
+   For $i = 0 To $rows-1 Step +1
+	  If $arrayMetrabyteKbank[0] = $aArrayExcel[$i][0] And $arrayMetrabyteKbank[1] = $aArrayExcel[$i][2] And $arrayMetrabyteKbank[2] = $aArrayExcel[$i][4] And $arrayMetrabyteKbank[3] = $aArrayExcel[$i][5] And $arrayMetrabyteKbank[4] = $aArrayExcel[$i][6] Then
+		 ConsoleWrite("Match")
+		 ExitLoop
+	  Else
+		 If $aArrayExcel[$i][3] = "" Then
+			For $j=0 To 6 Step +1
+			   $newDataArray[$i][$j] = $aArrayExcel[$i][$j]
+			Next
+		 Else
+			ContinueLoop
+		 EndIf
+	  EndIf
+   Next
 
-;~    For $i=8 to 23
-;~ 	  Send(_Excel_RangeRead($oWorkbook,Default,"A"&$i))
-;~ 	  Send("{TAB 2}")
-;~ 	  Send(_Excel_RangeRead($oWorkbook,Default,"B"&$i))
-;~ 	  Send("{TAB}")
-;~ 	  Send(_Excel_RangeRead($oWorkbook,Default,"C"&$i))
-;~ 	  Send("{TAB}")
-;~ 	  Send(_Excel_RangeRead($oWorkbook,Default,"E"&$i))
-;~ 	  Send("{TAB}")
-;~ 	  Send(_Excel_RangeRead($oWorkbook,Default,"F"&$i))
-;~ 	  Send("{TAB}")
-;~ 	  Send(_Excel_RangeRead($oWorkbook,Default,"G"&$i))
-;~ 	  Send("{ENTER}")
-;~    Next
+   For $i=0 To $rows-1 Step +1
+	  If $newDataArray[$i][0] = "" Then
+		 $checkArrayNull += 1
+	  Else
+		 ContinueLoop
+	  EndIf
+   Next
+
+   While(True)
+	  If $checkArrayNull = $rows Then
+		 ConsoleWrite("Null")
+		 ExitLoop
+	  Else
+		 $data = Run ( "notepad.exe " & $pathMainStatement, @WindowsDir )
+		 Sleep(3000)
+		 Send("{ENTER}")
+		 Send("{UP}")
+		 For $i=0 To $rows-1 Step +1
+			If $newDataArray[$i][0] = "" Then
+			   ContinueLoop
+			EndIf
+			For $j=0 To 6 Step +1
+			   If $j = 1 or $j = 3  Then
+				  ContinueLoop
+			   EndIf
+			   Send($newDataArray[$i][$j])
+			   Send("{TAB}")
+			Next
+			Send("{BS}")
+			Send("{ENTER}")
+		 Next
+		 Send("{BS}")
+		 ExitLoop
+	  EndIf
+   WEnd
+
+   If $checkArrayNull = $rows Then
+	  Sleep(1000)
+	  Send("!+{F4}",0)
+	  ConsoleWrite("Null")
+   Else
+	  Sleep(5000)
+	  Send("^s")
+	  Sleep(5000)
+	  ProcessClose($data)
+	  Sleep(5000)
+	  Send("!+{F4}",0)
+   EndIf
 
 EndFunc
 
